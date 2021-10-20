@@ -1,4 +1,5 @@
 #!groovy
+//ok
 
 pipeline {
     agent any 
@@ -6,7 +7,7 @@ pipeline {
     triggers {
         githubPush()
     }
-    
+
     stages {
         stage('Stage 1') {
             steps {
