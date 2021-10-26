@@ -1,10 +1,9 @@
 #!groovy
-//ok
 
 pipeline {
     agent any 
     stages {
-        stage('Stage 1') {
+        stage('AWS Infrastructure') {
             steps {
                 echo 'Hello world!' 
             }
