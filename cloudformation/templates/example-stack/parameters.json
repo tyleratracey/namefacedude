@@ -1,0 +1,14 @@
+[
+    {
+        "ParameterKey": "InstanceType",
+        "ParameterValue": "t2.large"
+    },
+    {
+        "ParameterKey": "KeyName",
+        "ParameterValue": "masterkey"
+    },
+    {
+        "ParameterKey": "SSHLocation",
+        "ParameterValue": "70.110.29.139/32"
+    }
+]
