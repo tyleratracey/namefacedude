@@ -2,6 +2,22 @@
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "AWS Service Catalog template. Stands up a Jenkins server.",
     "Parameters": {
+        "VpcCidr": {
+            "Description": "CIDR Block for VPC",
+            "Type": "String",
+            "Default": "10.199.0.0/16",
+            "AllowedValues": [
+                "10.199.0.0/16"
+            ]
+        },
+        "PublicSubnetCidr": {
+            "Description": "Public Subnet",
+            "Type": "String",
+            "Default": "10.199.10.0/24",
+            "AllowedValues": [
+                "10.199.10.0/24"
+            ]
+        },
         "KeyName": {
             "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
             "Type": "String",
@@ -38,7 +54,9 @@
         "VPC": {
             "Type": "AWS::EC2::VPC",
             "Properties": {
-                "CidrBlock": "10.0.0.0/16",
+                "CidrBlock": {
+                    "Ref": "VpcCidr"
+                },
                 "EnableDnsSupport": "true",
                 "EnableDnsHostnames": "true",
                 "Tags": [
@@ -59,11 +77,23 @@
         },
         "Subnet": {
             "Type": "AWS::EC2::Subnet",
+            "DependsOn": "VPC",
             "Properties": {
                 "VpcId": {
                     "Ref": "VPC"
                 },
-                "CidrBlock": "10.0.0.0/24",
+                "CidrBlock": {
+                    "Ref": "PublicSubnetCidr"
+                },
+                "MapPublicIpOnLaunch": "true",
+                "AvailabilityZone": {
+                    "Fn::Select": [
+                        "0",
+                        {
+                            "Fn::GetAZs": ""
+                        }
+                    ]
+                },
                 "Tags": [
                     {
                         "Key": "Application",
@@ -82,6 +112,7 @@
         },
         "InternetGateway": {
             "Type": "AWS::EC2::InternetGateway",
+            "DependsOn": "VPC",
             "Properties": {
                 "Tags": [
                     {
@@ -101,6 +132,7 @@
         },
         "AttachGateway": {
             "Type": "AWS::EC2::VPCGatewayAttachment",
+            "DependsOn": "VPC",
             "Properties": {
                 "VpcId": {
                     "Ref": "VPC"
@@ -112,6 +144,7 @@
         },
         "RouteTable": {
             "Type": "AWS::EC2::RouteTable",
+            "DependsOn": "VPC",
             "Properties": {
                 "VpcId": {
                     "Ref": "VPC"
@@ -134,7 +167,10 @@
         },
         "Route": {
             "Type": "AWS::EC2::Route",
-            "DependsOn": "AttachGateway",
+            "DependsOn": [
+                "VPC",
+                "AttachGateway"
+            ],
             "Properties": {
                 "RouteTableId": {
                     "Ref": "RouteTable"
@@ -147,6 +183,10 @@
         },
         "SubnetRouteTableAssociation": {
             "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "DependsOn": [
+                "VPC",
+                "InternetGateway"
+            ],
             "Properties": {
                 "SubnetId": {
                     "Ref": "Subnet"
@@ -158,6 +198,10 @@
         },
         "NetworkAcl": {
             "Type": "AWS::EC2::NetworkAcl",
+            "DependsOn": [
+                "VPC",
+                "InternetGateway"
+            ],
             "Properties": {
                 "VpcId": {
                     "Ref": "VPC"
@@ -180,6 +224,10 @@
         },
         "InboundHTTPNetworkAclEntry": {
             "Type": "AWS::EC2::NetworkAclEntry",
+            "DependsOn": [
+                "VPC",
+                "InternetGateway"
+            ],
             "Properties": {
                 "NetworkAclId": {
                     "Ref": "NetworkAcl"
@@ -197,6 +245,10 @@
         },
         "InboundSSHNetworkAclEntry": {
             "Type": "AWS::EC2::NetworkAclEntry",
+            "DependsOn": [
+                "VPC",
+                "InternetGateway"
+            ],
             "Properties": {
                 "NetworkAclId": {
                     "Ref": "NetworkAcl"
@@ -214,6 +266,10 @@
         },
         "InboundResponsePortsNetworkAclEntry": {
             "Type": "AWS::EC2::NetworkAclEntry",
+            "DependsOn": [
+                "VPC",
+                "InternetGateway"
+            ],
             "Properties": {
                 "NetworkAclId": {
                     "Ref": "NetworkAcl"
@@ -231,6 +287,10 @@
         },
         "OutBoundHTTPNetworkAclEntry": {
             "Type": "AWS::EC2::NetworkAclEntry",
+            "DependsOn": [
+                "VPC",
+                "InternetGateway"
+            ],
             "Properties": {
                 "NetworkAclId": {
                     "Ref": "NetworkAcl"
@@ -248,6 +308,10 @@
         },
         "OutBoundHTTPSNetworkAclEntry": {
             "Type": "AWS::EC2::NetworkAclEntry",
+            "DependsOn": [
+                "VPC",
+                "InternetGateway"
+            ],
             "Properties": {
                 "NetworkAclId": {
                     "Ref": "NetworkAcl"
@@ -265,6 +329,10 @@
         },
         "OutBoundResponsePortsNetworkAclEntry": {
             "Type": "AWS::EC2::NetworkAclEntry",
+            "DependsOn": [
+                "VPC",
+                "InternetGateway"
+            ],
             "Properties": {
                 "NetworkAclId": {
                     "Ref": "NetworkAcl"
@@ -342,6 +410,7 @@
         },
         "JenkinsInstance": {
             "Type": "AWS::EC2::Instance",
+            "DependsOn": "AttachGateway",
             "Properties": {
                 "ImageId": {
                     "Ref": "AMI"
@@ -394,6 +463,25 @@
                     }
                 ]
             }
+        }
+    },
+    "Outputs": {
+        "URL": {
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        "http://",
+                        {
+                            "Fn::GetAtt": [
+                                "JenkinsInstance",
+                                "PublicIp"
+                            ]
+                        }
+                    ]
+                ]
+            },
+            "Description": "Jenkins server URL"
         }
     }
 }

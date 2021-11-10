@@ -224,7 +224,7 @@
                 }
             }
         },
-        "SubnetRouteTableAssociation": {
+        "SubnetARouteTableAssociation": {
             "Type": "AWS::EC2::SubnetRouteTableAssociation",
             "DependsOn": [
                 "VPC",
@@ -239,7 +239,7 @@
                 }
             }
         },
-        "Subnet2RouteTableAssociation": {
+        "SubnetBRouteTableAssociation": {
             "Type": "AWS::EC2::SubnetRouteTableAssociation",
             "DependsOn": [
                 "VPC",
@@ -406,7 +406,7 @@
                 }
             }
         },
-        "SubnetNetworkAclAssociation": {
+        "SubnetANetworkAclAssociation": {
             "Type": "AWS::EC2::SubnetNetworkAclAssociation",
             "Properties": {
                 "SubnetId": {
