@@ -477,7 +477,8 @@
                                 "JenkinsInstance",
                                 "PublicIp"
                             ]
-                        }
+                        },
+                        ":8080"
                     ]
                 ]
             },
